@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Enum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Enum, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
 import enum
@@ -12,6 +13,20 @@ class EstadoLead(str, enum.Enum):
     propuesta = "propuesta"
     convertido = "convertido"
     perdido = "perdido"
+
+
+# --- Reglas de transición del pipeline ---
+# Define qué transiciones están permitidas entre estados.
+# convertido y perdido como origen no aparecen aquí porque:
+#   - convertido → no admite más cambios
+#   - perdido → solo puede volver a "nuevo" (recuperación)
+TRANSICIONES_PERMITIDAS: dict[EstadoLead, set[EstadoLead]] = {
+    EstadoLead.nuevo:      {EstadoLead.contactado},
+    EstadoLead.contactado: {EstadoLead.interesado, EstadoLead.perdido},
+    EstadoLead.interesado: {EstadoLead.propuesta, EstadoLead.perdido},
+    EstadoLead.propuesta:  {EstadoLead.convertido, EstadoLead.perdido},
+    EstadoLead.perdido:    {EstadoLead.nuevo},
+}
 
 
 # --- TABLA: clientes ---
@@ -43,3 +58,22 @@ class Lead(Base):
     ultimo_contacto  = Column(DateTime)
     proxima_accion   = Column(DateTime)
     fecha_creacion   = Column(DateTime, server_default=func.now())
+
+    # Relación con el historial de cambios de estado
+    historial = relationship("LeadHistory", back_populates="lead", order_by="LeadHistory.fecha")
+
+
+# --- TABLA: historial de cambios de estado de leads ---
+class LeadHistory(Base):
+    """Registra cada cambio de estado en el pipeline para trazabilidad completa."""
+    __tablename__ = "lead_history"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    lead_id         = Column(Integer, ForeignKey("leads.id", ondelete="CASCADE"), nullable=False)
+    estado_anterior = Column(Enum(EstadoLead), nullable=False)
+    estado_nuevo    = Column(Enum(EstadoLead), nullable=False)
+    fecha           = Column(DateTime, server_default=func.now(), nullable=False)
+    notas           = Column(Text, default="")
+
+    # Relación inversa hacia el lead
+    lead = relationship("Lead", back_populates="historial")
