@@ -21,3 +21,9 @@ env/
 
 # macOS
 .DS_Store
+
+# Syncthing
+*.sync-conflict-*
+
+# Documentación PDF
+*.pdf

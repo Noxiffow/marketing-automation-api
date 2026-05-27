@@ -5,6 +5,18 @@ from app.database import Base
 import enum
 
 
+# --- ENUMs para el motor de automatización ---
+class TipoCondicion(str, enum.Enum):
+    dias_sin_contacto    = "dias_sin_contacto"     # ultimo_contacto >= X días atrás o nunca
+    proxima_accion_vencida = "proxima_accion_vencida"  # proxima_accion < ahora
+    estado_es            = "estado_es"             # lead.estado == valor
+
+
+class TipoAccion(str, enum.Enum):
+    cambiar_estado = "cambiar_estado"  # cambia el estado del lead (si transición válida)
+    notificar      = "notificar"       # registra una notificación en la tabla
+
+
 # --- ENUM: estados posibles de un Lead ---
 class EstadoLead(str, enum.Enum):
     nuevo = "nuevo"
@@ -77,3 +89,31 @@ class LeadHistory(Base):
 
     # Relación inversa hacia el lead
     lead = relationship("Lead", back_populates="historial")
+
+
+# --- TABLA: reglas de automatización ---
+class ReglaAutomatizacion(Base):
+    """Define una regla del tipo: SI <condicion> ENTONCES <accion>."""
+    __tablename__ = "reglas_automatizacion"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    nombre           = Column(String(150), nullable=False)
+    condicion_tipo   = Column(Enum(TipoCondicion), nullable=False)
+    condicion_valor  = Column(String(100), nullable=False)  # ej: "3" (días) o "nuevo" (estado)
+    accion_tipo      = Column(Enum(TipoAccion), nullable=False)
+    accion_valor     = Column(String(100), nullable=False)  # ej: "contactado" o mensaje
+    activa           = Column(Boolean, default=True)
+    fecha_creacion   = Column(DateTime, server_default=func.now())
+
+
+# --- TABLA: notificaciones generadas por el motor ---
+class Notificacion(Base):
+    """Registro de notificaciones disparadas por el motor de automatización."""
+    __tablename__ = "notificaciones"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    lead_id     = Column(Integer, ForeignKey("leads.id", ondelete="CASCADE"), nullable=False)
+    regla_id    = Column(Integer, ForeignKey("reglas_automatizacion.id", ondelete="SET NULL"), nullable=True)
+    mensaje     = Column(Text, nullable=False)
+    leida       = Column(Boolean, default=False)
+    fecha       = Column(DateTime, server_default=func.now(), nullable=False)

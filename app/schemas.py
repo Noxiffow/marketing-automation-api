@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
-from app.models import EstadoLead
+from app.models import EstadoLead, TipoCondicion, TipoAccion
 
 
 # ─────────────────────────────────────────
@@ -108,3 +108,58 @@ class LeadOut(BaseModel):
 class LeadOutConHistorial(LeadOut):
     """Lead con su historial completo de cambios de estado incluido."""
     historial: List[LeadHistoryOut] = []
+
+
+# ─────────────────────────────────────────
+#  REGLAS DE AUTOMATIZACIÓN
+# ─────────────────────────────────────────
+
+class ReglaCreate(BaseModel):
+    """Datos para crear una regla de automatización."""
+    nombre:          str
+    condicion_tipo:  TipoCondicion
+    condicion_valor: str
+    accion_tipo:     TipoAccion
+    accion_valor:    str
+    activa:          bool = True
+
+
+class ReglaUpdate(BaseModel):
+    """Actualización parcial de una regla."""
+    nombre:          Optional[str] = None
+    condicion_tipo:  Optional[TipoCondicion] = None
+    condicion_valor: Optional[str] = None
+    accion_tipo:     Optional[TipoAccion] = None
+    accion_valor:    Optional[str] = None
+    activa:          Optional[bool] = None
+
+
+class ReglaOut(BaseModel):
+    """Lo que devuelve la API al consultar una regla."""
+    id:              int
+    nombre:          str
+    condicion_tipo:  TipoCondicion
+    condicion_valor: str
+    accion_tipo:     TipoAccion
+    accion_valor:    str
+    activa:          bool
+    fecha_creacion:  Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+# ─────────────────────────────────────────
+#  NOTIFICACIONES
+# ─────────────────────────────────────────
+
+class NotificacionOut(BaseModel):
+    id:       int
+    lead_id:  int
+    regla_id: Optional[int]
+    mensaje:  str
+    leida:    bool
+    fecha:    datetime
+
+    class Config:
+        from_attributes = True
