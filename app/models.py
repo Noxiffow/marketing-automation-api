@@ -106,6 +106,19 @@ class ReglaAutomatizacion(Base):
     fecha_creacion   = Column(DateTime, server_default=func.now())
 
 
+# --- TABLA: usuarios del sistema ---
+class User(Base):
+    """Usuarios con acceso a la API."""
+    __tablename__ = "users"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    username         = Column(String(80), unique=True, index=True, nullable=False)
+    email            = Column(String(150), unique=True, index=True, nullable=False)
+    hashed_password  = Column(String(200), nullable=False)
+    activo           = Column(Boolean, default=True)
+    fecha_creacion   = Column(DateTime, server_default=func.now())
+
+
 # --- TABLA: notificaciones generadas por el motor ---
 class Notificacion(Base):
     """Registro de notificaciones disparadas por el motor de automatización."""

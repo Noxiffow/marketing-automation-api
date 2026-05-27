@@ -150,6 +150,35 @@ class ReglaOut(BaseModel):
 
 
 # ─────────────────────────────────────────
+#  AUTENTICACIÓN / USUARIOS
+# ─────────────────────────────────────────
+
+class UserCreate(BaseModel):
+    """Datos para registrar un nuevo usuario."""
+    username: str
+    email:    EmailStr
+    password: str
+
+
+class UserOut(BaseModel):
+    """Datos públicos de un usuario (sin contraseña)."""
+    id:             int
+    username:       str
+    email:          str
+    activo:         bool
+    fecha_creacion: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class Token(BaseModel):
+    """Respuesta del endpoint de login."""
+    access_token: str
+    token_type:   str
+
+
+# ─────────────────────────────────────────
 #  NOTIFICACIONES
 # ─────────────────────────────────────────
 

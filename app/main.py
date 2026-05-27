@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.database import engine, Base
-from app.routers import clientes, leads, reglas
+from app.routers import clientes, leads, reglas, auth
 from app.scheduler import iniciar_scheduler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -25,6 +25,7 @@ app = FastAPI(
 )
 
 # Registrar los routers
+app.include_router(auth.router)
 app.include_router(clientes.router)
 app.include_router(leads.router)
 app.include_router(reglas.router)

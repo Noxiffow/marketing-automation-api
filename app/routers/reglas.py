@@ -5,8 +5,13 @@ from typing import List
 from app.database import get_db
 from app.models import ReglaAutomatizacion, Notificacion
 from app.schemas import ReglaCreate, ReglaUpdate, ReglaOut, NotificacionOut
+from app.auth import get_current_user
 
-router = APIRouter(prefix="/api/automatizacion", tags=["Automatización"])
+router = APIRouter(
+    prefix="/api/automatizacion",
+    tags=["Automatización"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 # GET /api/automatizacion/reglas — listar reglas

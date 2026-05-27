@@ -10,8 +10,13 @@ from app.schemas import (
     LeadCreate, LeadUpdate, LeadEstado, LeadOut,
     LeadOutConHistorial, LeadHistoryOut,
 )
+from app.auth import get_current_user
 
-router = APIRouter(prefix="/api/leads", tags=["Leads"])
+router = APIRouter(
+    prefix="/api/leads",
+    tags=["Leads"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 # ────────────────────────────────────────────────────────────────────────
